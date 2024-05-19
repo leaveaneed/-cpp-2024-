@@ -1,107 +1,143 @@
-#include <vector>
-#include <string>
-#include <ctime>
-#include <fstream>
 #include <iostream>
+#include <fstream>
+#include <vector>
+#include <queue>
+#include <string>
+#include <map>
+#include <cstdlib>
+#include <ctime>
 #include <cmath>
-#include <optional>
+#include <limits>
+#include <utility>
+
+class Equation {
+public:
+    Equation(double a, double b, double c) : a(a), b(b), c(c) {}
+    std::pair<double, double> solve() const {
+        double discriminant = b * b - 4 * a * c;
+        if (discriminant < 0) return {NULL, NULL};
+        double sqrtDiscriminant = std::sqrt(discriminant);
+        return {(-b + sqrtDiscriminant) / (2 * a), (-b - sqrtDiscriminant) / (2 * a)};
+    }
+    std::string toString() const {
+        return std::to_string(a) + "x^2 + " + std::to_string(b) + "x + " + std::to_string(c);
+    }
+private:
+    double a, b, c;
+};
 
 class Student {
+public:
+    Student(std::string name) : name(name) {}
+    virtual ~Student() {}
+    virtual std::pair<double, double> solveEquation(const Equation& eq) const = 0;
+    std::string getName() const { return name; }
 private:
     std::string name;
-    char mark;
-    std::vector<double> ans;
+};
 
-    static char GetMark() {
-        int score = rand() % 3 + 3;
-        return (score == 3) ? 'C' : (score == 4) ? 'B' : 'A';
-    }
-
-    static void InputData(std::ifstream& file, double& a, double& b, double& c, int number) {
-        for (int i = 1; i < number; ++i) {
-            std::string s;
-            std::getline(file, s);
-        }
-        file >> a >> b >> c;
-    }
-
-    static void CalculateRoots(double a, double b, double c, std::vector<double>& ans) {
-        double D = b * b - 4 * a * c;
-        if (D < 0) {
-            ans.clear();
-        } else {
-            ans.resize(D == 0 ? 1 : 2);
-            if (D == 0.0) {
-                ans[0] = -b / (2 * a);
-            } else {
-                ans[0] = (-b + std::sqrt(D)) / (2 * a);
-                ans[1] = (-b - std::sqrt(D)) / (2 * a);
-            }
-        }
-    }
-
+class GoodStudent : public Student {
 public:
-    Student(const std::string& _name, int number) : name(_name) {
-        mark = GetMark();
-        GetAnswers(mark, number);
+    using Student::Student;
+    std::pair<double, double> solveEquation(const Equation& eq) const override {
+        return eq.solve();
     }
+};
 
-    void GetAnswers(char mark, int number) {
-        if (mark == 'A') {
-            std::ifstream file("input.txt");
-            double a, b, c;
-            InputData(file, a, b, c, number);
-            file.close();
-            CalculateRoots(a, b, c, ans);
-        } else if (mark == 'C') {
-            ans = {0};
-        } else if (mark == 'B') {
-            int chance = rand() % 20 + 1;
-            if (chance <= 11) {
-                std::ifstream file("input.txt");
-                double a, b, c;
-                InputData(file, a, b, c, number);
-                file.close();
-                CalculateRoots(a, b, c, ans);
-            } else {
-                ans = {0};
-            }
-        }
-    }
-
-    void PrintResults(int number) {
-        std::cout << "Number: " << number << std::endl;
-        std::cout << name << std::endl;
-        if (ans.empty()) {
-            std::cout << "No roots found." << std::endl;
+class AverageStudent : public Student {
+public:
+    using Student::Student;
+    std::pair<double, double> solveEquation(const Equation& eq) const override {
+        if (std::rand() % 100 < 55) {  // 55% вероятность правильного решения
+            return eq.solve();
         } else {
-            for (double root : ans) {
-                std::cout << root << std::endl;
-            }
+            return {NULL, NULL};  // Некорректное решение
         }
     }
 };
 
-void Program() {
-    std::string name;
-    int number;
-    std::cout << "Enter name: ";
-    std::cin >> name;
-    std::cout << "Enter assignment number: ";
-    std::cin >> number;
-    Student student(name, number);
-    student.PrintResults(number);
-}
+class BadStudent : public Student {
+public:
+    using Student::Student;
+    std::pair<double, double> solveEquation(const Equation& eq) const override {
+        return {0, 0};  // Всегда неверное решение
+    }
+};
+
+struct Submission {
+    Equation equation;
+    std::pair<double, double> solution;
+    std::string studentName;
+};
+
+class Teacher {
+public:
+    void receiveSubmission(const Submission& submission) {
+        submissions.push(submission);
+    }
+
+    void evaluateSubmissions() {
+        while (!submissions.empty()) {
+            Submission submission = submissions.front();
+            submissions.pop();
+
+            auto correctSolution = submission.equation.solve();
+            if (correctSolution == submission.solution) {
+                results[submission.studentName]++;
+            }
+        }
+    }
+
+    void publishResults() const {
+        for (const auto& [studentName, score] : results) {
+            std::cout << studentName << ": " << score << " correct solutions\n";
+        }
+    }
+private:
+    std::queue<Submission> submissions;
+    std::map<std::string, int> results;
+};
 
 int main() {
-    srand(time(nullptr)); // Initialize random seed once
+    std::srand(std::time(nullptr)); // Инициализация генератора случайных чисел
 
-    char anotherAttempt;
-    do {
-        Program();
-        std::cout << "Do you want to try another student/number? (y/n): ";
-        std::cin >> anotherAttempt;
-    } while (anotherAttempt == 'y');
+    // Чтение уравнений из файла (предположим, что файл называется "equations.txt")
+    std::ifstream file("equations.txt");
+    std::vector<Equation> equations;
+    double a, b, c;
+    while (file >> a >> b >> c) {
+        equations.emplace_back(a, b, c);
+    }
+
+// Создание студентов
+std::vector<Student*> students = {
+    new GoodStudent("Alice"),
+    new AverageStudent("Bob"),
+    new BadStudent("Charlie"),
+    new GoodStudent("David"),
+    new AverageStudent("Eve"),
+};
+
+    // Преподаватель
+    Teacher teacher;
+
+    // Студенты решают задачи и отправляют решения преподавателю
+    for (const auto& eq : equations) {
+        for (const auto& student : students) {
+            teacher.receiveSubmission({eq, student->solveEquation(eq), student->getName()});
+        }
+    }
+
+    // Преподаватель проверяет решения
+    teacher.evaluateSubmissions();
+
+    // Публикация результатов
+    teacher.publishResults();
+
+    // Освобождение памяти
+    for (auto student : students) {
+        delete student;
+    }
 
     return 0;
 }
