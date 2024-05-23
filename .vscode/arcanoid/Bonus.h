@@ -1,29 +1,14 @@
-#ifndef BONUS_H
-#define BONUS_H
-
+#pragma once
 #include <SFML/Graphics.hpp>
 
 class Bonus {
 public:
-    virtual ~Bonus() = default;
-    virtual void apply() = 0;
-    virtual void update() = 0;
-    virtual void draw(sf::RenderWindow& window) = 0;
-    virtual sf::FloatRect getBounds() const = 0;
+    Bonus(float x, float y);
+    void draw(sf::RenderWindow& window);
+    void update();
+   
+
+private:
+    sf::CircleShape shape;
+    
 };
-
-class ResizePaddleBonus : public Bonus {
-    // Implementation...
-};
-
-class ChangeBallSpeedBonus : public Bonus {
-    // Implementation...
-};
-
-class StickyBallBonus : public Bonus {
-    // Implementation...
-};
-
-// Other bonuses...
-
-#endif // BONUS_H

@@ -1,18 +1,15 @@
 #include "Game.h"
 
-Game::Game() 
-    : window(sf::VideoMode(800, 600), "Arkanoid"), 
-      paddle(100, 20, 10), 
-      ball(10, 5), 
-      score(0), 
-      lives(3) {
-    paddle.setPosition(sf::Vector2f(400, 550));
-    ball.setPosition(sf::Vector2f(400, 300));
 
-    // Инициализация блоков и бонусов
-    // blocks.push_back(std::make_unique<UnbreakableBlock>(...));
-    // blocks.push_back(std::make_unique<BonusBlock>(...));
-    // bonuses.push_back(std::make_unique<ResizePaddleBonus>(...));
+Game::Game()
+    : window(sf::VideoMode(800, 600), "Arkanoid"),
+      paddle(400.f, 550.f), // Вызов конструктора Paddle с аргументами x и y
+      ball(400.f, 300.f) {
+    blocks.push_back(std::make_unique<Block>(100.f, 100.f, 60.f, 20.f));
+    blocks.push_back(std::make_unique<Block>(200.f, 100.f, 60.f, 20.f));
+
+    
+    bonuses.push_back(std::make_unique<Bonus>(150.f, 150.f));
 }
 
 void Game::run() {
@@ -24,15 +21,29 @@ void Game::run() {
 }
 
 void Game::processEvents() {
-    // Обработка событий
+    sf::Event event;
+    while (window.pollEvent(event)) {
+        if (event.type == sf::Event::Closed)
+            window.close();
+    }
 }
 
 void Game::update() {
-    // Обновление логики игры
+    
+    for (auto& bonus : bonuses) {
+        bonus->update();
+    }
 }
 
 void Game::render() {
     window.clear();
-    // Отрисовка объектов
+    paddle.draw(window);
+    ball.draw(window);
+    for (auto& block : blocks) {
+        block->draw(window);
+    }
+    for (auto& bonus : bonuses) {
+        bonus->draw(window);
+    }
     window.display();
 }

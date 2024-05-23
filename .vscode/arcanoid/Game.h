@@ -2,9 +2,10 @@
 #include <SFML/Graphics.hpp>
 #include "Paddle.h"
 #include "Ball.h"
-#include "vector"
-
-// Другие необходимые подключения
+#include "Block.h" 
+#include "Bonus.h" 
+#include <vector>
+#include <memory> 
 
 class Game {
 public:
