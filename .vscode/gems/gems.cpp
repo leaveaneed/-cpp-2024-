@@ -69,6 +69,14 @@ void swapGems(Gem& gem1, Gem& gem2) {
 }
 
 void checkMatches(Gem board[][BOARD_SIZE]) {
+    // Reset all matches
+    for (int i = 0; i < BOARD_SIZE; ++i) {
+        for (int j = 0; j < BOARD_SIZE; ++j) {
+            board[i][j].isMatched = false;
+        }
+    }
+
+    // Check horizontal matches
     for (int i = 0; i < BOARD_SIZE; ++i) {
         for (int j = 0; j < BOARD_SIZE - 2; ++j) {
             if (board[i][j].sprite.getTextureRect() == board[i][j + 1].sprite.getTextureRect() &&
@@ -76,10 +84,12 @@ void checkMatches(Gem board[][BOARD_SIZE]) {
                 board[i][j].isMatched = true;
                 board[i][j + 1].isMatched = true;
                 board[i][j + 2].isMatched = true;
+                std::cout << "Horizontal match found at: (" << i << ", " << j << ")\n";
             }
         }
     }
 
+    // Check vertical matches
     for (int j = 0; j < BOARD_SIZE; ++j) {
         for (int i = 0; i < BOARD_SIZE - 2; ++i) {
             if (board[i][j].sprite.getTextureRect() == board[i + 1][j].sprite.getTextureRect() &&
@@ -87,6 +97,7 @@ void checkMatches(Gem board[][BOARD_SIZE]) {
                 board[i][j].isMatched = true;
                 board[i + 1][j].isMatched = true;
                 board[i + 2][j].isMatched = true;
+                std::cout << "Vertical match found at: (" << i << ", " << j << ")\n";
             }
         }
     }
@@ -96,6 +107,7 @@ void removeMatches(Gem board[][BOARD_SIZE], const sf::Texture& texture) {
     for (int j = 0; j < BOARD_SIZE; ++j) {
         for (int i = BOARD_SIZE - 1; i >= 0; --i) {
             if (board[i][j].isMatched) {
+                std::cout << "Removing match at: (" << i << ", " << j << ")\n";
                 for (int k = i; k > 0; --k) {
                     board[k][j].sprite.setTextureRect(board[k - 1][j].sprite.getTextureRect());
                     board[k][j].isMatched = board[k - 1][j].isMatched;
@@ -209,7 +221,9 @@ int main() {
         }
 
         if (!isAnimating) {
-            while (updateBoard(board, gemTexture)) {}
+            if (updateBoard(board, gemTexture)) {
+                while (updateBoard(board, gemTexture)) {}
+            }
         }
 
         window.clear();
