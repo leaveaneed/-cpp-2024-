@@ -105,22 +105,30 @@ void checkMatches(Gem board[][BOARD_SIZE]) {
 
 void removeMatches(Gem board[][BOARD_SIZE], const sf::Texture& texture) {
     for (int j = 0; j < BOARD_SIZE; ++j) {
+        int emptyCount = 0; // Счетчик пустых ячеек в столбце
         for (int i = BOARD_SIZE - 1; i >= 0; --i) {
             if (board[i][j].isMatched) {
-                std::cout << "Removing match at: (" << i << ", " << j << ")\n";
                 for (int k = i; k > 0; --k) {
                     board[k][j].sprite.setTextureRect(board[k - 1][j].sprite.getTextureRect());
                     board[k][j].isMatched = board[k - 1][j].isMatched;
                 }
-                int textureIndex = std::rand() % 4;
-                sf::IntRect textureRect(textureIndex * GEM_SIZE, 0, GEM_SIZE, GEM_SIZE);
-                board[0][j].sprite.setTexture(texture);
-                board[0][j].sprite.setTextureRect(textureRect);
-                board[0][j].isMatched = false;
+                emptyCount++;
             }
+        }
+        // Заполняем пустые ячейки новыми случайными гемами сверху
+        for (int i = 0; i < emptyCount; ++i) {
+            int textureIndex = std::rand() % 4;
+            sf::IntRect textureRect(textureIndex * GEM_SIZE, 0, GEM_SIZE, GEM_SIZE);
+            board[i][j].sprite.setTexture(texture);
+            board[i][j].sprite.setTextureRect(textureRect);
+            board[i][j].isMatched = false;
+            board[i][j].animationProgress = 0.0f; // Сбрасываем анимацию для нового гема
+            board[i][j].startPosition = sf::Vector2f(j * GEM_SIZE, -GEM_SIZE * (emptyCount - i));
+            board[i][j].targetPosition = sf::Vector2f(j * GEM_SIZE, i * GEM_SIZE);
         }
     }
 }
+
 
 bool updateBoard(Gem board[][BOARD_SIZE], const sf::Texture& texture) {
     checkMatches(board);
